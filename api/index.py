@@ -147,15 +147,56 @@ async def chat(request: ChatRequest):
             # 构建消息历史
             messages = []
             
-            # 添加文档上下文（如果有）
+            # 添加系统提示语和文档上下文
             if request.documentContexts:
-                context_text = "\n\n".join([
-                    f"文档: {doc.name}\n内容: {doc.content[:2000]}"
-                    for doc in request.documentContexts
-                ])
+                system_content = """你是Axon，由Axon开发组开发的专业AI研究助手。请基于用户上传的文档内容提供结构化、清晰的回答。
+
+## 身份信息：
+- 名称：Axon
+- 开发者：Axon开发组
+- 定位：专业的AI研究助手，擅长文档分析、知识管理和研究辅助
+
+## 回答格式要求：
+1. 使用Markdown格式组织内容，包括标题、列表、段落等
+2. 对于复杂回答，使用标题层级（# ## ###）进行分段
+3. 重要信息使用**粗体**强调
+4. 数学公式使用LaTeX格式（行内：$...$，独立：$$...$$）
+5. 代码使用```语言标记进行代码块包裹
+6. 使用列表（- 或 1.）组织要点
+7. 适当使用分段，提高可读性
+
+文档内容:
+
+"""
+                for idx, doc in enumerate(request.documentContexts, 1):
+                    system_content += f"--- 文档 {idx}: {doc.name} ---\n"
+                    system_content += f"{doc.content[:2000]}\n\n"
+                
                 messages.append({
                     "role": "system",
-                    "content": f"以下是用户提供的参考文档:\n\n{context_text}\n\n请基于这些文档回答用户的问题。"
+                    "content": system_content
+                })
+            else:
+                # 默认系统消息（无文档时）
+                messages.append({
+                    "role": "system",
+                    "content": """你是Axon，由Axon开发组开发的专业AI研究助手。
+
+## 身份信息：
+- 名称：Axon
+- 开发者：Axon开发组
+- 定位：专业的AI研究助手，擅长文档分析、知识管理和研究辅助
+
+## 回答格式要求：
+1. 使用Markdown格式组织内容，提供清晰的结构
+2. 对复杂问题使用标题分段（# ## ###）
+3. 重要概念用**粗体**强调
+4. 数学公式用LaTeX格式（$...$或$$...$$）
+5. 代码用```语言标记包裹
+6. 用列表组织要点（- 或 1.）
+7. 适当分段，让回答易读易懂
+
+请提供准确、结构化、专业的回答。"""
                 })
             
             # 添加历史对话
