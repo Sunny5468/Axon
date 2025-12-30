@@ -229,7 +229,3 @@ async def generate_quiz(request: dict):
         status_code=501,
         detail="测验生成功能在 Vercel 上不可用，需要服务器环境"
     )
-
-# Vercel handler using Mangum
-from mangum import Mangum
-handler = Mangum(app, lifespan="off")
