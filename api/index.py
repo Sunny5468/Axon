@@ -237,5 +237,6 @@ async def generate_quiz(request: dict):
         detail="测验生成功能在 Vercel 上不可用，需要服务器环境"
     )
 
-# Vercel handler
-handler = app
+# Vercel handler - 使用 Mangum 包装 FastAPI
+from mangum import Mangum
+handler = Mangum(app)
