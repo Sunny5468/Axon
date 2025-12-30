@@ -133,69 +133,83 @@ async def crawl_webpage(request: CrawlRequest):
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    """聊天对话"""
+    """聊天对话 - 流式输出"""
+    from fastapi.responses import StreamingResponse
+    
     if not DEEPSEEK_API_KEY:
         raise HTTPException(
             status_code=500,
             detail="API密钥未配置，请在 Vercel 环境变量中设置 DEEPSEEK_API_KEY"
         )
     
-    try:
-        # 构建消息历史
-        messages = []
-        
-        # 添加文档上下文（如果有）
-        if request.documentContexts:
-            context_text = "\n\n".join([
-                f"文档: {doc.name}\n内容: {doc.content[:2000]}"
-                for doc in request.documentContexts
-            ])
-            messages.append({
-                "role": "system",
-                "content": f"以下是用户提供的参考文档:\n\n{context_text}\n\n请基于这些文档回答用户的问题。"
-            })
-        
-        # 添加历史对话
-        for msg in request.history:
-            messages.append({"role": msg.role, "content": msg.content})
-        
-        # 添加当前消息
-        messages.append({"role": "user", "content": request.message})
-        
-        # 调用 DeepSeek API
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                f"{API_BASE_URL}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "deepseek-chat",
-                    "messages": messages,
-                    "temperature": 0.7,
-                    "max_tokens": 2000
-                }
-            )
+    async def generate_stream():
+        try:
+            # 构建消息历史
+            messages = []
             
-            if response.status_code != 200:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=f"DeepSeek API 错误: {response.text}"
-                )
+            # 添加文档上下文（如果有）
+            if request.documentContexts:
+                context_text = "\n\n".join([
+                    f"文档: {doc.name}\n内容: {doc.content[:2000]}"
+                    for doc in request.documentContexts
+                ])
+                messages.append({
+                    "role": "system",
+                    "content": f"以下是用户提供的参考文档:\n\n{context_text}\n\n请基于这些文档回答用户的问题。"
+                })
             
-            result = response.json()
-            assistant_message = result['choices'][0]['message']['content']
+            # 添加历史对话
+            for msg in request.history:
+                messages.append({"role": msg.role, "content": msg.content})
             
-            return {
-                "success": True,
-                "message": assistant_message
-            }
+            # 添加当前消息
+            messages.append({"role": "user", "content": request.message})
+            
+            # 调用 DeepSeek API（流式）
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                async with client.stream(
+                    "POST",
+                    f"{API_BASE_URL}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": "deepseek-chat",
+                        "messages": messages,
+                        "temperature": 0.7,
+                        "max_tokens": 2000,
+                        "stream": True
+                    }
+                ) as response:
+                    if response.status_code != 200:
+                        error_text = await response.aread()
+                        yield f"data: {{\"error\": \"API错误: {error_text.decode()}\"}}\n\n"
+                        return
+                    
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            data_str = line[6:]
+                            if data_str.strip() == "[DONE]":
+                                yield f"data: {{\"done\": true}}\n\n"
+                                break
+                            
+                            try:
+                                data = json.loads(data_str)
+                                if "choices" in data and len(data["choices"]) > 0:
+                                    delta = data["choices"][0].get("delta", {})
+                                    content = delta.get("content", "")
+                                    if content:
+                                        # 转义内容中的引号和换行符
+                                        content_escaped = content.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+                                        yield f"data: {{\"content\": \"{content_escaped}\"}}\n\n"
+                            except json.JSONDecodeError:
+                                continue
+        
+        except Exception as e:
+            yield f"data: {{\"error\": \"{str(e)}\"}}\n\n"
     
-    except httpx.HTTPError as e:
-        raise HTTPException(status_code=500, detail=f"API 请求失败: {str(e)}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"处理失败: {str(e)}")
+    return StreamingResponse(generate_stream(), media_type="text/event-stream")
 
 # 其他功能在 Vercel 上不可用
 @app.post("/api/audio-to-text")

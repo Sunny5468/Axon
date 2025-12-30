@@ -6,7 +6,7 @@
     <title>Axon - AI Research Assistant</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/frontend/axon-icon.svg">
+    <link rel="icon" type="image/svg+xml" href="axon-icon.svg">
     
     <!-- Environment Configuration -->
     <script src="config.js"></script>
@@ -723,7 +723,7 @@
         <!-- 顶部导航栏 -->
         <div class="top-bar">
             <div class="app-title">
-                <img src="/frontend/axon-icon.svg" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;" alt="Axon">
+                <img src="axon-icon.svg" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;" alt="Axon">
                 Axon
             </div>
             <div class="top-buttons">
@@ -866,7 +866,7 @@
                 
                 let fullResponse = '';
                 
-                // 使用 EventSource 或 fetch with streaming
+                // 使用流式响应
                 const response = await fetch(`${window.API_ENDPOINT}/chat`, {
                     method: 'POST',
                     headers: {
@@ -883,53 +883,40 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                // 先尝试解析为普通 JSON 响应
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    const data = await response.json();
-                    if (data.message) {
-                        fullResponse = data.message;
-                        updateStreamingMessage(assistantMessageEl, fullResponse);
-                        finishStreamingMessage(assistantMessageEl);
-                    } else {
-                        throw new Error('响应格式错误');
-                    }
-                } else {
-                    // 读取流式响应
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
+                // 读取流式响应
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                while (true) {
+                    const { done, value } = await reader.read();
                     
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        
-                        if (done) break;
-                        
-                        const chunk = decoder.decode(value, { stream: true });
-                        const lines = chunk.split('\n');
-                        
-                        for (const line of lines) {
-                            if (line.startsWith('data: ')) {
-                                const jsonStr = line.slice(6);
-                                if (jsonStr.trim()) {
-                                    try {
-                                        const data = JSON.parse(jsonStr);
-                                        
-                                        if (data.error) {
-                                            throw new Error(data.error);
-                                        }
-                                        
-                                        if (data.content) {
-                                            fullResponse += data.content;
-                                            updateStreamingMessage(assistantMessageEl, fullResponse);
-                                        }
-                                        
-                                        if (data.done) {
-                                            // 流式传输完成，只移除光标
-                                            finishStreamingMessage(assistantMessageEl);
-                                        }
-                                    } catch (e) {
-                                        console.error('解析流数据错误:', e);
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const jsonStr = line.slice(6);
+                            if (jsonStr.trim()) {
+                                try {
+                                    const data = JSON.parse(jsonStr);
+                                    
+                                    if (data.error) {
+                                        throw new Error(data.error);
                                     }
+                                    
+                                    if (data.content) {
+                                        fullResponse += data.content;
+                                        updateStreamingMessage(assistantMessageEl, fullResponse);
+                                    }
+                                    
+                                    if (data.done) {
+                                        // 流式传输完成，只移除光标
+                                        finishStreamingMessage(assistantMessageEl);
+                                    }
+                                } catch (e) {
+                                    console.error('解析流数据错误:', e);
                                 }
                             }
                         }
@@ -966,7 +953,7 @@
             
             const avatar = document.createElement('div');
             avatar.className = 'message-avatar';
-            avatar.innerHTML = '<img src="/frontend/axon-icon.svg" style="width: 20px; height: 20px;" alt="AI">';
+            avatar.innerHTML = '<img src="axon-icon.svg" style="width: 20px; height: 20px;" alt="AI">';
             messageEl.appendChild(avatar);
             
             const content = document.createElement('div');
@@ -1116,7 +1103,7 @@
                     if (role === 'user') {
                         avatar.textContent = '👤';
                     } else {
-                        avatar.innerHTML = '<img src="/frontend/axon-icon.svg" style="width: 20px; height: 20px;" alt="AI">';
+                        avatar.innerHTML = '<img src="axon-icon.svg" style="width: 20px; height: 20px;" alt="AI">';
                     }
                     messageEl.appendChild(avatar);
                 }
