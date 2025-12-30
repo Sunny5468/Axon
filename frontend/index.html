@@ -2272,13 +2272,17 @@ ${data.reasoning_content}
             }
         }
         
-        // 页面加载完成后自动发送预设消息
+        // 页面加载完成后显示机器人的欢迎消息
         window.addEventListener('DOMContentLoaded', function() {
             // 延迟一点时间确保所有元素都已加载
             setTimeout(() => {
-                chatInput.value = "Hey, Melissa. It's Sunny here";
-                sendMessage();
-            }, 500);
+                // 移除空状态提示
+                const emptyState = chatContainer.querySelector('.empty-state');
+                if (emptyState) emptyState.remove();
+                
+                // 添加机器人的欢迎消息
+                addMessageToUI("Hey, Melissa. It's Sunny here", 'assistant');
+            }, 300);
         });
     </script>
     
