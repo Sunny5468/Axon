@@ -2271,6 +2271,15 @@ ${data.reasoning_content}
                 mapCard.remove();
             }
         }
+        
+        // 页面加载完成后自动发送预设消息
+        window.addEventListener('DOMContentLoaded', function() {
+            // 延迟一点时间确保所有元素都已加载
+            setTimeout(() => {
+                chatInput.value = "Hey, Melissa. It's Sunny here";
+                sendMessage();
+            }, 500);
+        });
     </script>
     
     <!-- Marked.js for Markdown rendering -->
