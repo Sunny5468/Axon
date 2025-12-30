@@ -709,20 +709,131 @@
         }
 
         @media (max-width: 768px) {
+            /* 移动端适配 */
+            body {
+                font-size: 14px;
+            }
+            
+            .top-bar {
+                padding: 0 12px;
+                height: 50px;
+            }
+            
+            .app-title {
+                font-size: 16px;
+            }
+            
+            .top-buttons {
+                gap: 4px;
+            }
+            
+            .btn-primary {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+            
+            .main-content {
+                height: calc(100vh - 50px);
+                flex-direction: column;
+            }
+            
+            /* 左侧面板在移动端变为可切换的抽屉 */
             .left-panel {
-                display: none;
+                position: fixed;
+                left: -100%;
+                top: 50px;
+                width: 85%;
+                max-width: 320px;
+                height: calc(100vh - 50px);
+                z-index: 1000;
+                transition: left 0.3s ease;
+                box-shadow: 2px 0 8px rgba(0,0,0,0.15);
             }
+            
+            .left-panel.mobile-active {
+                left: 0;
+            }
+            
+            /* 右侧面板完全隐藏 */
             .right-panel {
+                display: none !important;
+            }
+            
+            /* 主聊天区域占满屏幕 */
+            .center-panel {
+                flex: 1;
+                width: 100%;
+            }
+            
+            /* 聊天输入区域 */
+            .chat-input-container {
+                padding: 12px;
+                gap: 8px;
+            }
+            
+            .chat-input {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+            
+            .send-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            /* 消息样式 */
+            .chat-message {
+                padding: 12px;
+            }
+            
+            .message-content {
+                font-size: 14px;
+                max-width: 100%;
+            }
+            
+            /* 添加汉堡菜单按钮 */
+            .mobile-menu-btn {
+                display: inline-block !important;
+                background: none;
+                border: none;
+                font-size: 20px;
+                color: #1f2937;
+                cursor: pointer;
+                padding: 4px 8px;
+                margin-right: 8px;
+            }
+            
+            .mobile-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
                 display: none;
             }
+            
+            .mobile-overlay.mobile-active {
+                display: block;
+            }
+        }
+        
+        /* 桌面端隐藏移动端元素 */
+        .mobile-menu-btn {
+            display: none;
         }
     </style>
 </head>
 <body>
+    <!-- 移动端遮罩层 -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    
     <div class="app-container">
         <!-- 顶部导航栏 -->
         <div class="top-bar">
             <div class="app-title">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
                 <img src="axon-icon.svg" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;" alt="Axon">
                 Axon
             </div>
@@ -1128,6 +1239,25 @@
 
         // 发送按钮点击
         sendBtn.addEventListener('click', sendMessage);
+
+        // 移动端菜单控制
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const leftPanel = document.querySelector('.left-panel');
+        
+        if (mobileMenuBtn && mobileOverlay && leftPanel) {
+            // 打开菜单
+            mobileMenuBtn.addEventListener('click', () => {
+                leftPanel.classList.add('mobile-active');
+                mobileOverlay.classList.add('mobile-active');
+            });
+            
+            // 点击遮罩关闭菜单
+            mobileOverlay.addEventListener('click', () => {
+                leftPanel.classList.remove('mobile-active');
+                mobileOverlay.classList.remove('mobile-active');
+            });
+        }
 
         // Add sources按钮功能
         const addSourcesBtn = document.getElementById('addSourcesBtn');
