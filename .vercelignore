@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+.env
+.env.local
+venv/
+node_modules/
+.git/
+*.log
+upload_files/
+diagram_files/
+audio_files/
+.DS_Store

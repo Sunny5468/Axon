@@ -1,0 +1,104 @@
+<mxGraphModel dx="1502" dy="677" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    
+    <!-- Central Topic: ABC Theory -->
+    <mxCell id="central_topic" value="<b>ABC Theory</b><br><font size='2'>Structure &amp; Change of Attitude</font>" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#4A90E2;strokeColor=#357ABD;fontColor=#ffffff;fontFamily=Oswald;fontSize=18;gradientColor=#2C6FB7;gradientDirection=north;shadow=1;" vertex="1" parent="1">
+      <mxGeometry x="500" y="350" width="180" height="180" as="geometry" />
+    </mxCell>
+
+    <!-- Main Branch: Core Concept -->
+    <mxCell id="branch_core" value="<b>Core Concept</b><br><font size='1'>An evaluative statement about an object, person, or event.</font>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5D9CEC;strokeColor=#4A89DC;fontColor=#ffffff;fontFamily=Oswald;fontSize=14;gradientColor=#4A89DC;gradientDirection=east;" vertex="1" parent="1">
+      <mxGeometry x="300" y="200" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="edge_core" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#5D9CEC;strokeWidth=2;fontColor=#ffffff;fontFamily=Oswald;" edge="1" parent="1" source="central_topic" target="branch_core">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Main Branch: ABC Structure -->
+    <mxCell id="branch_structure" value="<b>ABC Structure</b><br><font size='1'>Three interrelated components of an attitude.</font>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#37BC9B;strokeColor=#2FA285;fontColor=#ffffff;fontFamily=Oswald;fontSize=14;gradientColor=#2FA285;gradientDirection=east;" vertex="1" parent="1">
+      <mxGeometry x="700" y="200" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="edge_structure" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#37BC9B;strokeWidth=2;fontColor=#ffffff;fontFamily=Oswald;" edge="1" parent="1" source="central_topic" target="branch_structure">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Main Branch: Relationships & Application -->
+    <mxCell id="branch_relation" value="<b>Relationships &amp; Application</b><br><font size='1'>Interdependence &amp; levers for change.</font>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F6BB42;strokeColor=#E6A23C;fontColor=#ffffff;fontFamily=Oswald;fontSize=14;gradientColor=#E6A23C;gradientDirection=east;" vertex="1" parent="1">
+      <mxGeometry x="300" y="500" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="edge_relation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#F6BB42;strokeWidth=2;fontColor=#ffffff;fontFamily=Oswald;" edge="1" parent="1" source="central_topic" target="branch_relation">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Main Branch: Link to Cognitive Dissonance -->
+    <mxCell id="branch_dissonance" value="<b>Link to Cognitive Dissonance</b><br><font size='1'>Explains why attitudes change.</font>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DA4453;strokeColor=#C1404D;fontColor=#ffffff;fontFamily=Oswald;fontSize=14;gradientColor=#C1404D;gradientDirection=east;" vertex="1" parent="1">
+      <mxGeometry x="700" y="500" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="edge_dissonance" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#DA4453;strokeWidth=2;fontColor=#ffffff;fontFamily=Oswald;" edge="1" parent="1" source="central_topic" target="branch_dissonance">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Sub-nodes for ABC Structure -->
+    <!-- A - Affect -->
+    <mxCell id="node_affect" value="<b>A - Affect</b><br><font size='1'>Emotional or feeling segment.<br><i>Example: &quot;I hate my boss!&quot;</i><br>Characteristics: Emotional core.</font>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A0D468;strokeColor=#8CC152;fontColor=#ffffff;fontFamily=Oswald;fontSize=12;gradientColor=#8CC152;" vertex="1" parent="1">
+      <mxGeometry x="550" y="100" width="140" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="edge_affect" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#37BC9B;strokeWidth=1;fontColor=#ffffff;fontFamily=Oswald;" edge="1" parent="1" source="branch_structure" target="node_affect">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- B - Behavioral Intention -->
+    <mxCell id="node_behavior" value="<b>B - Behavioral Intention</b><br><font size='1'>An intention to behave in a certain way.<br><i>Example: &quot;I plan to transfer.&quot;</i><br>Characteristics: Action-oriented.</font>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCE54;strokeColor=#F6BB42;fontColor=#ffffff;fontFamily=Oswald;fontSize=12;gradientColor=#F6BB42;" vertex="1" parent="1">
+      <mxGeometry x="770" y="100" width="140" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="edge_behavior" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#37BC9B;strokeWidth=1;fontColor=#ffffff;fontFamily=Oswald;" edge="1" parent="1" source="branch_structure" target="node_behavior">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- C - Cognition -->
+    <mxCell id="node_cognition" value="<b>C - Cognition</b><br><font size='1'>Opinion or belief segment.<br><i>Example: &quot;My boss is unfair.&quot;</i><br>Characteristics: Rational basis.</font>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4FC1E9;strokeColor=#3BAFDA;fontColor=#ffffff;fontFamily=Oswald;fontSize=12;gradientColor=#3BAFDA;" vertex="1" parent="1">
+      <mxGeometry x="930" y="100" width="140" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="edge_cognition" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#37BC9B;strokeWidth=1;fontColor=#ffffff;fontFamily=Oswald;" edge="1" parent="1" source="branch_structure" target="node_cognition">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Sub-nodes for Relationships & Application -->
+    <mxCell id="node_interrelated" value="<b>Closely Interrelated</b><br><font size='1'>Cognition → Affect → Behavioral Intention.<br>Together they form an &quot;attitude package&quot;.</font>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F6BB42;strokeColor=#E6A23C;fontColor=#ffffff;fontFamily=Oswald;fontSize=12;gradientColor=#E6A23C;" vertex="1" parent="1">
+      <mxGeometry x="150" y="400" width="140" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="edge_interrelated" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#F6BB42;strokeWidth=1;fontColor=#ffffff;fontFamily=Oswald;" edge="1" parent="1" source="branch_relation" target="node_interrelated">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="node_levers" value="<b>Levers for Change</b><br><font size='1'>1. Change Cognition (info)<br>2. Influence Affect (experience)<br>3. Guide Behavior (act first)</font>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F6BB42;strokeColor=#E6A23C;fontColor=#ffffff;fontFamily=Oswald;fontSize=12;gradientColor=#E6A23C;" vertex="1" parent="1">
+      <mxGeometry x="150" y="600" width="140" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="edge_levers" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#F6BB42;strokeWidth=1;fontColor=#ffffff;fontFamily=Oswald;" edge="1" parent="1" source="branch_relation" target="node_levers">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Sub-nodes for Link to Cognitive Dissonance -->
+    <mxCell id="node_dissonance_def" value="<b>Cognitive Dissonance Theory</b><br><font size='1'>Psychological discomfort from inconsistency between <b>Cognition (C)</b> and <b>Behavior (B)</b>.</font>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ED5565;strokeColor=#DA4453;fontColor=#ffffff;fontFamily=Oswald;fontSize=12;gradientColor=#DA4453;" vertex="1" parent="1">
+      <mxGeometry x="850" y="400" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="edge_dissonance_def" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#DA4453;strokeWidth=1;fontColor=#ffffff;fontFamily=Oswald;" edge="1" parent="1" source="branch_dissonance" target="node_dissonance_def">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="node_reduction" value="<b>Reduction Strategies</b><br><font size='1'>1. Change attitude (C/A)<br>2. Change behavior (B)<br>3. Rationalize (add new C)</font>" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ED5565;strokeColor=#DA4453;fontColor=#ffffff;fontFamily=Oswald;fontSize=12;gradientColor=#DA4453;" vertex="1" parent="1">
+      <mxGeometry x="850" y="600" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="edge_reduction" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#DA4453;strokeWidth=1;fontColor=#ffffff;fontFamily=Oswald;" edge="1" parent="1" source="branch_dissonance" target="node_reduction">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Connection showing the link between ABC and Dissonance -->
+    <mxCell id="conn_link" value="<b>Explains Change</b>" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endFill=1;strokeColor=#AC92EC;strokeWidth=2;dashed=1;fontColor=#AC92EC;fontFamily=Oswald;fontSize=11;labelBackgroundColor=none;" edge="1" parent="1" source="branch_structure" target="branch_dissonance">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

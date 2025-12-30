@@ -1,0 +1,2139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axon - AI Research Assistant</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/frontend/axon-icon.svg">
+    
+    <!-- Environment Configuration -->
+    <script src="config.js"></script>
+    
+    <!-- KaTeX CSS for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css">
+    
+    <!-- Mermaid for diagram rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: false,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#3b82f6',
+                primaryTextColor: '#1f2937',
+                primaryBorderColor: '#60a5fa',
+                lineColor: '#6b7280',
+                secondaryColor: '#f3f4f6',
+                tertiaryColor: '#e5e7eb'
+            }
+        });
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* 顶部导航栏 */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-right: auto;
+        }
+
+        .top-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .btn-primary:hover {
+            background: #333;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: #6b7280;
+            padding: 8px;
+            transition: color 0.3s;
+        }
+
+        .btn-icon:hover {
+            color: #1f2937;
+        }
+
+        /* 主容器 */
+        .main-content {
+            display: flex;
+            margin-top: 60px;
+            height: calc(100vh - 60px);
+            width: 100%;
+        }
+
+        /* 左侧 Sources 面板 */
+        .left-panel {
+            width: 340px;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            background: #fafafa;
+        }
+
+        .panel-header {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        .panel-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+
+        .add-btn {
+            width: 100%;
+            background: #000;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .add-btn:hover {
+            background: #333;
+        }
+
+        .sources-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .source-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #e5e7eb;
+        }
+
+        .source-item:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .source-name {
+            font-size: 13px;
+            color: #4b5563;
+            flex: 1;
+        }
+
+        .source-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #000;
+        }
+        
+        /* 半选中状态样式 */
+        input[type="checkbox"]:indeterminate {
+            background-color: #000;
+            border-color: #000;
+        }
+        
+        input[type="checkbox"]:indeterminate::before {
+            content: '';
+            display: block;
+            width: 10px;
+            height: 2px;
+            background: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .search-box {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        /* 中间 Chat 面板 */
+        .middle-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .chat-message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            flex: 1;
+            background: #f3f4f6;
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            color: #1f2937;
+            line-height: 1.7;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        /* 确保第一个元素没有上边距 */
+        .message-content > *:first-child {
+            margin-top: 0 !important;
+        }
+        
+        /* 确保最后一个元素没有下边距 */
+        .message-content > *:last-child {
+            margin-bottom: 0 !important;
+        }
+        
+        /* Markdown 样式 */
+        .message-content h1 {
+            font-size: 26px !important;
+            font-weight: 800 !important;
+            margin: 20px 0 14px 0 !important;
+            color: #111827 !important;
+            border-bottom: 3px solid #3b82f6 !important;
+            padding-bottom: 10px !important;
+            line-height: 1.3 !important;
+        }
+        
+        .message-content h2 {
+            font-size: 22px !important;
+            font-weight: 700 !important;
+            margin: 18px 0 12px 0 !important;
+            color: #1f2937 !important;
+            border-bottom: 2px solid #e5e7eb !important;
+            padding-bottom: 8px !important;
+            line-height: 1.4 !important;
+        }
+        
+        .message-content h3 {
+            font-size: 19px !important;
+            font-weight: 700 !important;
+            margin: 16px 0 10px 0 !important;
+            color: #374151 !important;
+            line-height: 1.4 !important;
+        }
+        
+        .message-content h4 {
+            font-size: 17px !important;
+            font-weight: 600 !important;
+            margin: 14px 0 8px 0 !important;
+            color: #4b5563 !important;
+            line-height: 1.4 !important;
+        }
+        
+        .message-content p {
+            margin: 12px 0 !important;
+            line-height: 1.8 !important;
+        }
+        
+        /* Increase spacing between consecutive paragraphs */
+        .message-content p + p {
+            margin-top: 16px !important;
+        }
+        
+        .message-content ul,
+        .message-content ol {
+            margin: 14px 0 !important;
+            padding-left: 28px !important;
+        }
+        
+        .message-content li {
+            margin: 8px 0 !important;
+            line-height: 1.7 !important;
+        }
+        
+        /* Increase spacing between list items */
+        .message-content li + li {
+            margin-top: 10px !important;
+        }
+        
+        .message-content blockquote {
+            border-left: 5px solid #3b82f6;
+            padding: 14px 18px;
+            margin: 16px 0;
+            background: #eff6ff;
+            color: #1e40af;
+            font-style: italic;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .message-content code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .message-content pre {
+            background: #1f2937 !important;
+            color: #f9fafb;
+            padding: 18px !important;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 16px 0 !important;
+            line-height: 1.6 !important;
+            border: 1px solid #374151;
+        }
+        
+        .message-content pre code {
+            background: none !important;
+            padding: 0 !important;
+            border-radius: 0;
+            font-size: 14px;
+            color: inherit;
+        }
+        
+        .message-content strong,
+        .message-content b {
+            font-weight: 700 !important;
+            color: #111827 !important;
+        }
+        
+        .message-content em,
+        .message-content i {
+            font-style: italic !important;
+            color: #374151 !important;
+        }
+        
+        .message-content a {
+            color: #2563eb;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .message-content a:hover {
+            border-bottom-color: #2563eb;
+            color: #1d4ed8;
+        }
+        
+        .message-content hr {
+            border: none;
+            border-top: 3px solid #e5e7eb;
+            margin: 24px 0;
+        }
+        
+        .message-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .message-content th,
+        .message-content td {
+            border: 1px solid #d1d5db;
+            padding: 10px 14px;
+            text-align: left;
+        }
+        
+        .message-content th {
+            background: #f3f4f6;
+            font-weight: 700;
+            color: #111827;
+        }
+        
+        .message-content tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .message-user .message-content {
+            background: #000;
+            color: white;
+            margin-left: auto;
+            margin-right: 0;
+            max-width: 70%;
+        }
+        
+        .message-user .message-content h1,
+        .message-user .message-content h2,
+        .message-user .message-content h3,
+        .message-user .message-content h4,
+        .message-user .message-content strong {
+            color: white;
+        }
+        
+        .message-user .message-content code {
+            background: #374151;
+            color: #f9fafb;
+        }
+        
+        .message-user .message-content pre {
+            background: #374151;
+        }
+
+        .chat-input-area {
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            max-height: 100px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #000;
+        }
+
+        .send-btn {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .send-btn:hover {
+            background: #333;
+        }
+
+        .send-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        /* 右侧 Studio 面板 */
+        .right-panel {
+            width: 340px;
+            border-left: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            background: #fafafa;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .right-panel h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+
+        .studio-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .studio-item {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #e5e7eb;
+        }
+
+        .studio-item:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .studio-icon {
+            font-size: 24px;
+        }
+
+        .studio-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        .studio-edit {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .studio-item:hover .studio-edit {
+            opacity: 1;
+        }
+
+        .studio-section {
+            margin-bottom: 24px;
+        }
+
+        .studio-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .studio-card {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            font-size: 13px;
+            color: #374151;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .studio-card-title {
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .studio-card-meta {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .studio-menu {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #9ca3af;
+            font-size: 16px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        /* 流式输出光标动画 */
+        .cursor {
+            display: inline-block;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        /* KaTeX 数学公式样式调整 */
+        .katex {
+            font-size: 1.1em;
+        }
+        
+        .katex-display {
+            margin: 1em 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .search-filter-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            border-color: #9ca3af;
+        }
+
+        .filter-btn.active {
+            background: #000;
+            color: white;
+            border-color: #000;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .right-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .left-panel {
+                display: none;
+            }
+            .right-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <div class="top-bar">
+            <div class="app-title">
+                <img src="/frontend/axon-icon.svg" style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;" alt="Axon">
+                Axon
+            </div>
+            <div class="top-buttons">
+                <button class="btn-primary" onclick="location.reload()">+ Refresh notebook</button>
+                <button class="btn-icon">📊</button>
+                <button class="btn-icon">↗️</button>
+                <button class="btn-icon">⚙️</button>
+            </div>
+        </div>
+
+        <!-- 主容器 -->
+        <div class="main-content">
+            <!-- 左侧：Sources 面板 -->
+            <div class="left-panel">
+                <div class="panel-header">
+                    <h3>Sources</h3>
+                    <button class="add-btn" id="addSourcesBtn">+ Add sources</button>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="webSearchInput" class="search-input" placeholder="Enter website URL to crawl (e.g., https://example.com)">
+                </div>
+
+                <div class="search-filter-group" style="padding: 0 16px;">
+                    <button class="filter-btn active" id="searchWebBtn">🌐 Search the web</button>
+                </div>
+
+                <div style="padding: 0 16px; margin-bottom: 12px; font-size: 13px; color: #6b7280;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="selectAllCheckbox" checked>
+                        Select all sources
+                    </label>
+                </div>
+
+                <div class="sources-list" id="sourcesList">
+                    <!-- 源文件列表 - 点击Add sources添加 -->
+                </div>
+
+                <div style="padding: 16px; font-size: 12px; color: #6b7280; background: white; border-top: 1px solid #e5e7eb; text-align: center;">
+                    <span style="font-style: italic; color: #9ca3af;">powered by</span> <span style="font-weight: 600; color: #4b5563;">Axon Studio</span>
+                </div>
+            </div>
+
+            <!-- 中间：Chat 面板 -->
+            <div class="middle-panel">
+                <div class="chat-container" id="chatContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon"></div>
+                        <div class="empty-state-text">Start a conversation with your sources</div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="input-wrapper">
+                        <textarea class="chat-input" id="chatInput" placeholder="Ask a question about your sources..." rows="2"></textarea>
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：Studio 面板 -->
+            <div class="right-panel">
+                <h3>Studio</h3>
+
+                <!-- 工具网格 -->
+                <div class="studio-grid">
+                    <div class="studio-item" data-tool="audio">
+                        <div class="studio-icon">🎵</div>
+                        <div class="studio-label">Audio Overview</div>
+                    </div>
+                    <div class="studio-item" data-tool="mindmap">
+                        <div class="studio-icon">🗺️</div>
+                        <div class="studio-label">Mind Map</div>
+                    </div>
+                    <div class="studio-item" data-tool="datatable">
+                        <div class="studio-icon">📈</div>
+                        <div class="studio-label">Data table</div>
+                    </div>
+                    <div class="studio-item" data-tool="quiz">
+                        <div class="studio-icon">🎯</div>
+                        <div class="studio-label">Quiz</div>
+                    </div>
+                </div>
+
+                <!-- 最近项目 -->
+                <div class="studio-section">
+                    <div class="studio-section-title">Recent</div>
+                    <div id="recentList">
+                        <!-- 动态添加音频项 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        let conversationHistory = [];
+        let documentContents = []; // Store document content
+
+        // Send message
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            
+            if (!message) return;
+
+            // Add user message to UI
+            addMessageToUI(message, 'user');
+            chatInput.value = '';
+
+            // Disable send button
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+
+            try {
+                // 准备文档上下文 - 只包含被选中的文档
+                const selectedDocs = [];
+                const sourceItems = document.querySelectorAll('.source-item');
+                sourceItems.forEach(item => {
+                    const checkbox = item.querySelector('.source-checkbox');
+                    const docIndex = parseInt(item.getAttribute('data-doc-index'));
+                    if (checkbox && checkbox.checked && !isNaN(docIndex)) {
+                        const doc = documentContents[docIndex];
+                        if (doc) {
+                            selectedDocs.push({
+                                name: doc.name,
+                                content: doc.content
+                            });
+                        }
+                    }
+                });
+                
+                // 创建一个空的助手消息用于流式填充
+                const assistantMessageEl = createStreamingMessageElement();
+                chatContainer.appendChild(assistantMessageEl);
+                
+                let fullResponse = '';
+                
+                // 使用 EventSource 或 fetch with streaming
+                const response = await fetch(`${window.API_ENDPOINT}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        history: conversationHistory,
+                        documentContexts: selectedDocs
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // 读取流式响应
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const jsonStr = line.slice(6);
+                            if (jsonStr.trim()) {
+                                try {
+                                    const data = JSON.parse(jsonStr);
+                                    
+                                    if (data.error) {
+                                        throw new Error(data.error);
+                                    }
+                                    
+                                    if (data.content) {
+                                        fullResponse += data.content;
+                                        updateStreamingMessage(assistantMessageEl, fullResponse);
+                                    }
+                                    
+                                    if (data.done) {
+                                        // 流式传输完成，只移除光标
+                                        finishStreamingMessage(assistantMessageEl);
+                                    }
+                                } catch (e) {
+                                    console.error('解析流数据错误:', e);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // 保存到历史
+                conversationHistory.push({
+                    role: 'user',
+                    content: message
+                });
+                conversationHistory.push({
+                    role: 'assistant',
+                    content: fullResponse
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                addMessageToUI(`Error: ${error.message}`, 'system');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+            }
+        }
+        
+        // 创建流式消息元素
+        function createStreamingMessageElement() {
+            // 移除空状态
+            const emptyState = chatContainer.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+            
+            const messageEl = document.createElement('div');
+            messageEl.className = 'chat-message';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.innerHTML = '<img src="/frontend/axon-icon.svg" style="width: 20px; height: 20px;" alt="AI">';
+            messageEl.appendChild(avatar);
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.innerHTML = '<span class="cursor">▋</span>';
+            messageEl.appendChild(content);
+            
+            return messageEl;
+        }
+        
+        // 更新流式消息内容 - 实时渲染Markdown
+        let renderTimer = null;
+        function updateStreamingMessage(messageEl, text) {
+            const content = messageEl.querySelector('.message-content');
+            
+            // 实时渲染Markdown和数学公式
+            try {
+                const html = renderMarkdownAndMath(text);
+                content.innerHTML = html + '<span class="cursor">▋</span>';
+                
+                // 高亮代码块（防抖处理）
+                if (renderTimer) clearTimeout(renderTimer);
+                renderTimer = setTimeout(() => {
+                    content.querySelectorAll('pre code').forEach((block) => {
+                        if (!block.dataset.highlighted) {
+                            hljs.highlightElement(block);
+                            block.dataset.highlighted = 'yes';
+                        }
+                    });
+                }, 50);
+            } catch (e) {
+                // 如果渲染失败，回退到纯文本
+                content.textContent = text;
+                content.innerHTML += '<span class="cursor">▋</span>';
+            }
+            
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // 处理Markdown和数学公式的渲染
+        function renderMarkdownAndMath(text) {
+            // 先保护数学公式，避免被Markdown解析干扰
+            const mathPlaceholders = [];
+            let protectedText = text;
+            
+            // 保护独立公式 $$...$$
+            protectedText = protectedText.replace(/\$\$([\s\S]+?)\$\$/g, (match, formula) => {
+                const placeholder = `__MATH_DISPLAY_${mathPlaceholders.length}__`;
+                mathPlaceholders.push({ type: 'display', formula: formula.trim() });
+                return placeholder;
+            });
+            
+            // 保护行内公式 $...$
+            protectedText = protectedText.replace(/\$([^\$]+?)\$/g, (match, formula) => {
+                const placeholder = `__MATH_INLINE_${mathPlaceholders.length}__`;
+                mathPlaceholders.push({ type: 'inline', formula: formula.trim() });
+                return placeholder;
+            });
+            
+            // 使用marked渲染Markdown
+            let html = marked.parse(protectedText);
+            
+            // 恢复数学公式并渲染
+            mathPlaceholders.forEach((item, index) => {
+                const placeholder = item.type === 'display' 
+                    ? `__MATH_DISPLAY_${index}__` 
+                    : `__MATH_INLINE_${index}__`;
+                
+                try {
+                    const rendered = katex.renderToString(item.formula, {
+                        displayMode: item.type === 'display',
+                        throwOnError: false
+                    });
+                    html = html.replace(placeholder, rendered);
+                } catch (e) {
+                    // 如果渲染失败，保留原始公式
+                    html = html.replace(placeholder, 
+                        item.type === 'display' ? `$$${item.formula}$$` : `$${item.formula}$`);
+                }
+            });
+            
+            return html;
+        }
+        
+        // 渲染数学公式和Markdown（已废弃 - 改用实时渲染）
+        function renderMathInMessage(messageEl) {
+            const content = messageEl.querySelector('.message-content');
+            
+            // 移除光标
+            const cursor = content.querySelector('.cursor');
+            if (cursor) cursor.remove();
+            
+            // 注意：不再重新渲染内容，因为在流式输出时已经实时渲染了
+            // 如果重新使用 textContent 获取内容，会清除所有 HTML 格式
+            
+            // 高亮代码块（如果有遗漏）
+            content.querySelectorAll('pre code').forEach((block) => {
+                if (!block.dataset.highlighted) {
+                    hljs.highlightElement(block);
+                    block.dataset.highlighted = 'yes';
+                }
+            });
+        }
+        
+        // 完成流式消息（只移除光标）
+        function finishStreamingMessage(messageEl) {
+            const content = messageEl.querySelector('.message-content');
+            
+            // 移除光标
+            const cursor = content.querySelector('.cursor');
+            if (cursor) cursor.remove();
+            
+            // 确保所有代码块都被高亮
+            content.querySelectorAll('pre code').forEach((block) => {
+                if (!block.dataset.highlighted) {
+                    hljs.highlightElement(block);
+                    block.dataset.highlighted = 'yes';
+                }
+            });
+        }
+
+        // 添加消息到UI
+        function addMessageToUI(message, role) {
+            // 移除空状态
+            const emptyState = chatContainer.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+
+            const messageEl = document.createElement('div');
+            
+            // 系统消息特殊样式
+            if (role === 'system') {
+                messageEl.className = 'chat-message';
+                messageEl.style.backgroundColor = '#f0f9ff';
+                messageEl.style.border = '1px solid #bfdbfe';
+                messageEl.style.borderRadius = '8px';
+                messageEl.style.padding = '12px';
+                messageEl.style.fontSize = '14px';
+                messageEl.style.color = '#1e40af';
+                messageEl.style.justifyContent = 'center';
+                messageEl.textContent = message;
+            } else {
+                messageEl.className = 'chat-message' + (role === 'user' ? ' message-user' : '');
+
+                if (role !== 'error') {
+                    const avatar = document.createElement('div');
+                    avatar.className = 'message-avatar';
+                    if (role === 'user') {
+                        avatar.textContent = '👤';
+                    } else {
+                        avatar.innerHTML = '<img src="/frontend/axon-icon.svg" style="width: 20px; height: 20px;" alt="AI">';
+                    }
+                    messageEl.appendChild(avatar);
+                }
+
+                const content = document.createElement('div');
+                content.className = 'message-content';
+                content.textContent = message;
+                messageEl.appendChild(content);
+            }
+
+            chatContainer.appendChild(messageEl);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Enter键发送
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // 发送按钮点击
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Add sources按钮功能
+        const addSourcesBtn = document.getElementById('addSourcesBtn');
+        addSourcesBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.accept = '.pdf,.doc,.docx,.txt,.md';
+            
+            input.onchange = async (e) => {
+                const files = Array.from(e.target.files);
+                const sourcesList = document.getElementById('sourcesList');
+                
+                for (const file of files) {
+                    try {
+                        // 显示上传中状态
+                        const tempItem = document.createElement('div');
+                        tempItem.className = 'source-item';
+                        tempItem.innerHTML = `
+                            <span class="source-name">正在上传 ${file.name}...</span>
+                        `;
+                        sourcesList.appendChild(tempItem);
+                        
+                        // 上传到后端解析
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        
+                        const response = await fetch(`${window.API_ENDPOINT}/upload`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`上传失败: ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        // 存储文档内容
+                        documentContents.push({
+                            name: data.filename,
+                            content: data.content,
+                            length: data.length
+                        });
+                        
+                        // 移除临时项，添加成功项
+                        sourcesList.removeChild(tempItem);
+                        
+                        const sourceItem = document.createElement('div');
+                        sourceItem.className = 'source-item';
+                        sourceItem.setAttribute('data-doc-index', documentContents.length - 1);
+                        
+                        const icon = file.name.endsWith('.pdf') ? '📕' : 
+                                    file.name.endsWith('.docx') || file.name.endsWith('.doc') ? '📘' : '📄';
+                        sourceItem.innerHTML = `
+                            <span class="source-name">${icon} ${file.name}</span>
+                            <input type="checkbox" class="source-checkbox source-item-checkbox" checked>
+                        `;
+                        
+                        sourcesList.appendChild(sourceItem);
+                        
+                    } catch (error) {
+                        console.error('Upload error:', error);
+                        addMessageToUI(`Failed to upload ${file.name}: ${error.message}`, 'system');
+                        // Remove failed temporary items
+                        const tempItems = sourcesList.querySelectorAll('.source-item');
+                        tempItems.forEach(item => {
+                            if (item.textContent.includes('Uploading')) {
+                                sourcesList.removeChild(item);
+                            }
+                        });
+                    }
+                }
+                
+                if (files.length > 0) {
+                    const successCount = documentContents.length;
+                    addMessageToUI(`Successfully uploaded and parsed ${successCount} document(s). You can now ask questions!`, 'system');
+                }
+            };
+            
+            input.click();
+        });
+
+        // Web crawling functionality
+        const searchWebBtn = document.getElementById('searchWebBtn');
+        const webSearchInput = document.getElementById('webSearchInput');
+        
+        if (searchWebBtn && webSearchInput) {
+            searchWebBtn.addEventListener('click', async () => {
+                const url = webSearchInput.value.trim();
+                
+                if (!url) {
+                    addMessageToUI('Please enter a URL to crawl', 'system');
+                    return;
+                }
+                
+                // Validate URL format
+                try {
+                    new URL(url);
+                } catch (e) {
+                    addMessageToUI('Please enter a valid URL (e.g., https://example.com)', 'system');
+                    return;
+                }
+                
+                // Show crawling status
+                searchWebBtn.disabled = true;
+                searchWebBtn.innerHTML = '<span class="loading-spinner"></span> Crawling...';
+                addMessageToUI(`Crawling: ${url}`, 'system');
+                
+                try {
+                    const response = await fetch(`${window.API_ENDPOINT}/crawl`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ url: url })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Store document content
+                    documentContents.push({
+                        name: data.filename,
+                        content: data.content,
+                        length: data.length
+                    });
+                    
+                    // Add to sources list
+                    const sourcesList = document.getElementById('sourcesList');
+                    const sourceItem = document.createElement('div');
+                    sourceItem.className = 'source-item';
+                    sourceItem.setAttribute('data-doc-index', documentContents.length - 1);
+                    
+                    sourceItem.innerHTML = `
+                        <span class="source-name">🌐 ${data.filename}</span>
+                        <input type="checkbox" class="source-checkbox source-item-checkbox" checked>
+                    `;
+                    
+                    sourcesList.appendChild(sourceItem);
+                    
+                    // Clear input field
+                    webSearchInput.value = '';
+                    
+                    addMessageToUI(`Successfully crawled: ${data.filename} (${data.length} characters)`, 'system');
+                    
+                } catch (error) {
+                    console.error('Crawling error:', error);
+                    addMessageToUI(`Crawling failed: ${error.message}`, 'system');
+                } finally {
+                    searchWebBtn.disabled = false;
+                    searchWebBtn.innerHTML = '🌐 Search the web';
+                }
+            });
+            
+            // Support Enter key to trigger crawling
+            webSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    searchWebBtn.click();
+                }
+            });
+        }
+
+        // Select All Sources 功能
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                const sourceCheckboxes = document.querySelectorAll('.source-item-checkbox');
+                sourceCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+                
+                // 显示提示
+                if (isChecked) {
+                    console.log('已选中所有文档');
+                } else {
+                    console.log('已取消选中所有文档');
+                }
+            });
+        }
+        
+        // 监听各个source checkbox的变化，更新Select All状态
+        function updateSelectAllCheckbox() {
+            const sourceCheckboxes = document.querySelectorAll('.source-item-checkbox');
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            
+            if (sourceCheckboxes.length === 0) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+                return;
+            }
+            
+            const checkedCount = Array.from(sourceCheckboxes).filter(cb => cb.checked).length;
+            
+            if (checkedCount === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else if (checkedCount === sourceCheckboxes.length) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+        
+        // 使用事件委托监听source checkbox的变化
+        document.getElementById('sourcesList').addEventListener('change', function(e) {
+            if (e.target.classList.contains('source-item-checkbox')) {
+                updateSelectAllCheckbox();
+            }
+        });
+
+        // Studio工具点击功能
+        const studioItems = document.querySelectorAll('.studio-item');
+        studioItems.forEach(item => {
+            item.addEventListener('click', async () => {
+                const tool = item.getAttribute('data-tool');
+                const toolName = item.querySelector('.studio-label').textContent;
+                
+                // 添加点击效果
+                item.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    item.style.transform = 'scale(1)';
+                }, 150);
+                
+                // Audio Overview 特殊处理
+                if (tool === 'audio') {
+                    await generateAudioOverview();
+                } else if (tool === 'mindmap') {
+                    await generateMindMap();
+                } else if (tool === 'datatable') {
+                    await analyzeDataTable();
+                } else if (tool === 'quiz') {
+                    await generateQuiz();
+                } else {
+                    // 其他工具显示提示消息
+                    addMessageToUI(`${toolName} feature is under development, stay tuned!`, 'system');
+                }
+            });
+        });
+        
+        // 生成Audio Overview
+        async function generateAudioOverview() {
+            if (conversationHistory.length === 0) {
+                addMessageToUI('No conversation content yet. Please chat first before generating audio summary', 'system');
+                return;
+            }
+            
+            // Display workflow steps
+            addMessageToUI('Audio Overview generation started', 'system');
+            addMessageToUI('Step 1/4: Preparing conversation content...', 'system');
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            addMessageToUI('Step 2/4: Calling AI model to generate conversation summary...', 'system');
+            
+            try {
+                const response = await fetch(`${window.API_ENDPOINT}/generate-audio-summary`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        conversation: conversationHistory
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+                
+                addMessageToUI('Step 3/4: Generating voice audio (TTS)...', 'system');
+                
+                const data = await response.json();
+                
+                addMessageToUI('Step 4/4: Saving MP3 file...', 'system');
+                
+                // Add to Recent list
+                addAudioToRecent(data.filename, data.audio_url, data.summary);
+                
+                addMessageToUI(`Audio summary completed: ${data.filename}`, 'system');
+                
+            } catch (error) {
+                console.error('Generate audio error:', error);
+                addMessageToUI(`Audio generation failed: ${error.message}`, 'system');
+            }
+        }
+        
+        // 添加音频到Recent列表
+        function addAudioToRecent(filename, audioUrl, summary) {
+            const recentList = document.getElementById('recentList');
+            
+            const audioCard = document.createElement('div');
+            audioCard.className = 'studio-card audio-card';
+            audioCard.style.cursor = 'pointer';
+            audioCard.style.transition = 'all 0.3s';
+            
+            audioCard.innerHTML = `
+                <div style="flex: 1;">
+                    <div class="studio-card-title">${filename}</div>
+                    <div class="studio-card-meta" style="font-size: 11px; color: #9ca3af; margin-top: 4px;">${summary.substring(0, 50)}...</div>
+                </div>
+                <button class="studio-menu" onclick="event.stopPropagation(); deleteAudio(this)">×</button>
+            `;
+            
+            // 点击播放音频
+            audioCard.addEventListener('click', () => {
+                playAudio(audioUrl, filename, summary);
+            });
+            
+            // 添加到列表顶部
+            recentList.insertBefore(audioCard, recentList.firstChild);
+        }
+        
+        // 播放音频
+        function playAudio(audioUrl, filename, summary) {
+            // 在聊天区显示音频播放器
+            const audioPlayer = document.createElement('div');
+            audioPlayer.style.cssText = 'padding: 16px; background: #f3f4f6; border-radius: 8px; margin: 16px 0;';
+            
+            audioPlayer.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 8px;">${filename}</div>
+                <div style="font-size: 13px; color: #6b7280; margin-bottom: 12px;">${summary}</div>
+                <audio controls style="width: 100%;" autoplay>
+                    <source src="${audioUrl}" type="audio/mpeg">
+                    您的浏览器不支持音频播放。
+                </audio>
+            `;
+            
+            chatContainer.appendChild(audioPlayer);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // 删除音频
+        function deleteAudio(button) {
+            const audioCard = button.closest('.audio-card');
+            if (audioCard && confirm('确定要删除这个音频总结吗？')) {
+                audioCard.remove();
+            }
+        }
+        
+        // 数据分析功能
+        async function analyzeDataTable() {
+            // 检查是否有文档 - 使用与sendMessage相同的逻辑
+            const selectedDocs = [];
+            const sourceItems = document.querySelectorAll('.source-item');
+            sourceItems.forEach(item => {
+                const checkbox = item.querySelector('.source-checkbox');
+                const docIndex = parseInt(item.getAttribute('data-doc-index'));
+                if (checkbox && checkbox.checked && !isNaN(docIndex)) {
+                    const doc = documentContents[docIndex];
+                    if (doc) {
+                        selectedDocs.push({
+                            name: doc.name,
+                            content: doc.content
+                        });
+                    }
+                }
+            });
+            
+            if (selectedDocs.length === 0) {
+                addMessageToUI('Please upload and select at least one document before performing data analysis', 'system');
+                return;
+            }
+            
+            // Display workflow steps
+            addMessageToUI('Data Table analysis started', 'system');
+            addMessageToUI('Step 1/5: Scanning document content, identifying data...', 'system');
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            addMessageToUI('Step 2/5: Axon Reasoner analyzing data features in depth...', 'system');
+            
+            try {
+                const response = await fetch(`${window.API_ENDPOINT}/analyze-data`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        documents: selectedDocs
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // 检查是否有数据
+                if (data.status === 'no_data') {
+                    addMessageToUI(`${data.message}`, 'system');
+                    
+                    // 显示思考过程（如果有）
+                    if (data.reasoning_content) {
+                        const thinkingBox = document.createElement('div');
+                        thinkingBox.style.cssText = 'background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); border-radius: 8px; padding: 1px; margin: 16px 0;';
+                        thinkingBox.innerHTML = `
+                            <div style="background: #fef3c7; border-radius: 7px; padding: 16px;">
+                                <div style="font-weight: 700; color: #d97706; margin-bottom: 12px; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                                    <span style="font-size: 20px;"></span>
+                                    <span>AI 分析过程</span>
+                                    <span style="font-size: 12px; color: #9ca3af; font-weight: 400;">(点击展开/收起)</span>
+                                </div>
+                                <div style="font-size: 13px; color: #78350f; line-height: 1.8; white-space: pre-wrap; max-height: 400px; overflow-y: auto; display: none; background: white; padding: 16px; border-radius: 6px; margin-top: 8px; border: 1px solid #fcd34d;">
+${data.reasoning_content}
+                                </div>
+                            </div>
+                        `;
+                        chatContainer.appendChild(thinkingBox);
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                    
+                    addMessageToUI('Tip: Please include numerical data, tables, or statistical information in the conversation, then try again', 'system');
+                    return;
+                }
+                
+                // 显示思考过程
+                if (data.reasoning_content) {
+                    addMessageToUI('Step 3/5: Thinking process complete, performing statistical analysis...', 'system');
+                    
+                    const thinkingBox = document.createElement('div');
+                    thinkingBox.style.cssText = 'background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; padding: 1px; margin: 16px 0;';
+                    thinkingBox.innerHTML = `
+                        <div style="background: #f0fdf4; border-radius: 7px; padding: 16px;">
+                            <div style="font-weight: 700; color: #059669; margin-bottom: 12px; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px;" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                                <span style="font-size: 20px;"></span>
+                                <span>Axon Reasoner 分析思考</span>
+                                <span style="font-size: 12px; color: #9ca3af; font-weight: 400;">(点击展开/收起)</span>
+                            </div>
+                            <div style="font-size: 13px; color: #064e3b; line-height: 1.8; white-space: pre-wrap; max-height: 400px; overflow-y: auto; display: none; background: white; padding: 16px; border-radius: 6px; margin-top: 8px; border: 1px solid #a7f3d0;">
+${data.reasoning_content}
+                            </div>
+                        </div>
+                    `;
+                    chatContainer.appendChild(thinkingBox);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+                
+                addMessageToUI('Step 4/5: Generating statistical charts and visualizations...', 'system');
+                addMessageToUI('Step 5/5: Saving analysis results...', 'system');
+                
+                // Display statistics
+                const statsBox = document.createElement('div');
+                statsBox.style.cssText = 'background: #f3f4f6; border-left: 4px solid #10b981; padding: 16px; margin: 16px 0; border-radius: 6px;';
+                statsBox.innerHTML = `
+                    <div style="font-weight: 700; color: #065f46; margin-bottom: 12px; font-size: 16px;">Data Analysis Results</div>
+                    <div style="font-size: 14px; color: #374151; margin-bottom: 8px;"><strong>Data Description:</strong>${data.data_description}</div>
+                    <div style="font-size: 14px; color: #374151; margin-bottom: 8px;"><strong>Chart Type:</strong>${data.chart_type}</div>
+                    <div style="font-size: 14px; color: #374151;"><strong>Descriptive Statistics:</strong></div>
+                    <pre style="background: white; padding: 12px; border-radius: 4px; margin-top: 8px; overflow-x: auto; font-size: 12px;">${JSON.stringify(data.statistics, null, 2)}</pre>
+                `;
+                chatContainer.appendChild(statsBox);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                // Add to Recent list
+                addDataAnalysisToRecent(data.filename, data.image_url, data.code_url, data.txt_url, data.summary, data.chart_type);
+                
+                addMessageToUI(`Data analysis complete: ${data.filename}`, 'system');
+                
+            } catch (error) {
+                console.error('Data analysis error:', error);
+                addMessageToUI(`Data analysis failed: ${error.message}`, 'system');
+            }
+        }
+        
+        // 添加数据分析到Recent列表
+        function addDataAnalysisToRecent(filename, imageUrl, codeUrl, txtUrl, summary, chartType) {
+            const recentList = document.getElementById('recentList');
+            
+            const analysisCard = document.createElement('div');
+            analysisCard.className = 'studio-card data-analysis-card';
+            analysisCard.style.transition = 'all 0.3s';
+            
+            analysisCard.innerHTML = `
+                <div style="flex: 1;">
+                    <div class="studio-card-title">${filename}</div>
+                    <div class="studio-card-meta" style="font-size: 11px; color: #9ca3af; margin-top: 4px;">${chartType} - ${summary}</div>
+                    <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+                        <button onclick="event.stopPropagation(); viewDataChart('${imageUrl}', '${filename}')" 
+                                style="flex: 1; padding: 6px 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500; min-width: 80px;">
+                            查看图表
+                        </button>
+                        <button onclick="event.stopPropagation(); downloadFile('${codeUrl}', '${filename}.py')" 
+                                style="padding: 6px 12px; background: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; min-width: 70px;">
+                            💻 代码
+                        </button>
+                        <button onclick="event.stopPropagation(); downloadFile('${txtUrl}', '${filename}.txt')" 
+                                style="padding: 6px 12px; background: #4b5563; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; min-width: 70px;">
+                            📄 报告
+                        </button>
+                    </div>
+                </div>
+                <button class="studio-menu" onclick="event.stopPropagation(); deleteDataAnalysis(this)">×</button>
+            `;
+            
+            // 添加到列表顶部
+            recentList.insertBefore(analysisCard, recentList.firstChild);
+        }
+        
+        // 查看数据图表
+        async function viewDataChart(imageUrl, filename) {
+            try {
+                // 在聊天区显示图表
+                const chartContainer = document.createElement('div');
+                chartContainer.style.cssText = 'background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 10px; padding: 2px; margin: 16px 0;';
+                
+                chartContainer.innerHTML = `
+                    <div style="background: white; border-radius: 8px; padding: 20px;">
+                        <div style="font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 24px;"></span>
+                                <span style="color: #10b981; font-size: 16px;">${filename}</span>
+                            </div>
+                            <button onclick="downloadFile('${imageUrl}', '${filename}.png')" 
+                                    style="padding: 6px 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">
+                                下载图表
+                            </button>
+                        </div>
+                        <div style="text-align: center;">
+                            <img src="${imageUrl}" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="${filename}">
+                        </div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 16px; padding: 12px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #10b981;">
+                            提示：图表已使用matplotlib生成，可下载PNG文件或Python代码进行进一步分析
+                        </div>
+                    </div>
+                `;
+                
+                chatContainer.appendChild(chartContainer);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+            } catch (error) {
+                console.error('View chart error:', error);
+                addMessageToUI(`Failed to view chart: ${error.message}`, 'system');
+            }
+        }
+        
+        // Delete data analysis
+        function deleteDataAnalysis(button) {
+            const analysisCard = button.closest('.data-analysis-card');
+            if (analysisCard && confirm('Are you sure you want to delete this data analysis?')) {
+                analysisCard.remove();
+            }
+        }
+        
+        // Generate Quiz
+        async function generateQuiz() {
+            // Check if there are documents - use the same logic as sendMessage
+            const selectedDocs = [];
+            const sourceItems = document.querySelectorAll('.source-item');
+            sourceItems.forEach(item => {
+                const checkbox = item.querySelector('.source-checkbox');
+                const docIndex = parseInt(item.getAttribute('data-doc-index'));
+                if (checkbox && checkbox.checked && !isNaN(docIndex)) {
+                    const doc = documentContents[docIndex];
+                    if (doc) {
+                        selectedDocs.push({
+                            name: doc.name,
+                            content: doc.content
+                        });
+                    }
+                }
+            });
+            
+            if (selectedDocs.length === 0) {
+                addMessageToUI('Please upload and select at least one document before generating Quiz', 'system');
+                return;
+            }
+            
+            // Display workflow steps - improved display
+            addMessageToUI('Quiz generation started', 'system');
+            addMessageToUI('Generating 5 quiz questions based on ' + selectedDocs.length + ' selected document(s)', 'system');
+            
+            addMessageToUI('Step 1/3: Preparing document content...', 'system');
+            addMessageToUI('Organizing content from ' + selectedDocs.map(d => d.name).join(', '), 'system');
+            
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            addMessageToUI('Step 2/3: Calling AI model to generate questions...', 'system');
+            addMessageToUI('Analyzing documents with Axon model to generate high-quality quiz questions', 'system');
+            
+            try {
+                const response = await fetch(`${window.API_ENDPOINT}/generate-quiz`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        documents: selectedDocs.map(doc => ({
+                            name: doc.name,
+                            content: doc.content
+                        }))
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                addMessageToUI('Step 3/3: Quiz generation complete!', 'system');
+                addMessageToUI('Successfully generated 5 multiple-choice questions. Test your understanding!', 'system');
+
+                
+                // Render Quiz UI
+                renderQuiz(data.questions);
+                
+            } catch (error) {
+                console.error('Quiz generation failed:', error);
+                addMessageToUI(`Step 2/3: Generation failed`, 'error');
+                addMessageToUI(`Error message: ${error.message}`, 'error');
+            }
+        }
+        
+        // Render Quiz UI
+        function renderQuiz(questions) {
+            const chatContainer = document.getElementById('chatContainer');
+            
+            // Create Quiz container
+            const quizContainer = document.createElement('div');
+            quizContainer.className = 'quiz-container';
+            quizContainer.style.cssText = `
+                background: white;
+                border-radius: 12px;
+                padding: 24px;
+                margin: 16px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            `;
+            
+            // Title
+            const title = document.createElement('div');
+            title.innerHTML = '<h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 20px;">Quiz Time - Test Your Understanding</h3>';
+            quizContainer.appendChild(title);
+            
+            // User answers tracker
+            const userAnswers = new Array(questions.length).fill(null);
+            
+            // Render each question
+            questions.forEach((q, qIndex) => {
+                const questionBlock = document.createElement('div');
+                questionBlock.setAttribute('data-question-block', qIndex);
+                questionBlock.style.cssText = 'margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb;';
+                
+                // Question title
+                const questionTitle = document.createElement('div');
+                questionTitle.innerHTML = `<strong style="color: #374151; font-size: 16px;">Question ${qIndex + 1}: ${q.question}</strong>`;
+                questionTitle.style.marginBottom = '12px';
+                questionBlock.appendChild(questionTitle);
+                
+                // Options
+                const optionsContainer = document.createElement('div');
+                q.options.forEach((option, oIndex) => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'quiz-option';
+                    optionDiv.style.cssText = `
+                        padding: 12px 16px;
+                        margin: 8px 0;
+                        border: 2px solid #e5e7eb;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        background: white;
+                    `;
+                    optionDiv.innerHTML = `<span style="font-weight: 600; margin-right: 8px;">${String.fromCharCode(65 + oIndex)}.</span>${option}`;
+                    
+                    // Click option
+                    optionDiv.onclick = function() {
+                        // If answer already submitted, don't allow changes
+                        if (this.classList.contains('quiz-answered')) return;
+                        
+                        // Clear other options in the same question
+                        optionsContainer.querySelectorAll('.quiz-option').forEach(opt => {
+                            opt.style.background = 'white';
+                            opt.style.borderColor = '#e5e7eb';
+                        });
+                        
+                        // Highlight current option
+                        this.style.background = '#eff6ff';
+                        this.style.borderColor = '#3b82f6';
+                        userAnswers[qIndex] = oIndex;
+                    };
+                    
+                    optionsContainer.appendChild(optionDiv);
+                });
+                
+                questionBlock.appendChild(optionsContainer);
+                
+                // Answer explanation area (initially hidden)
+                const explanationDiv = document.createElement('div');
+                explanationDiv.className = 'quiz-explanation';
+                explanationDiv.style.cssText = `
+                    display: none;
+                    margin-top: 12px;
+                    padding: 12px;
+                    border-radius: 8px;
+                    background: #f3f4f6;
+                `;
+                questionBlock.appendChild(explanationDiv);
+                
+                quizContainer.appendChild(questionBlock);
+            });
+            
+            // Submit button
+            const submitButton = document.createElement('button');
+            submitButton.textContent = 'Submit Answers';
+            submitButton.style.cssText = `
+                background: #3b82f6;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                margin-right: 12px;
+            `;
+            submitButton.onmouseover = () => submitButton.style.background = '#2563eb';
+            submitButton.onmouseout = () => submitButton.style.background = '#3b82f6';
+            
+            submitButton.onclick = function() {
+                // Check if all questions are answered
+                if (userAnswers.some(a => a === null)) {
+                    alert('Please answer all questions before submitting!');
+                    return;
+                }
+                
+                // Calculate score
+                let correctCount = 0;
+                const questionBlocks = quizContainer.querySelectorAll('[data-question-block]');
+                
+                questions.forEach((q, qIndex) => {
+                    const questionBlock = questionBlocks[qIndex];
+                    const options = questionBlock.querySelectorAll('.quiz-option');
+                    const explanationDiv = questionBlock.querySelector('.quiz-explanation');
+                    
+                    const isCorrect = userAnswers[qIndex] === q.correct_answer;
+                    if (isCorrect) correctCount++;
+                    
+                    // Mark correct/incorrect answers
+                    options.forEach((opt, oIndex) => {
+                        opt.classList.add('quiz-answered');
+                        opt.style.cursor = 'default';
+                        
+                        if (oIndex === q.correct_answer) {
+                            opt.style.background = '#d1fae5';
+                            opt.style.borderColor = '#10b981';
+                            opt.innerHTML = `<span style="font-weight: 600; margin-right: 8px;">${String.fromCharCode(65 + oIndex)}.</span>${q.options[oIndex]} <span style="color: #10b981; margin-left: 8px;">✓ Correct Answer</span>`;
+                        } else if (oIndex === userAnswers[qIndex]) {
+                            opt.style.background = '#fee2e2';
+                            opt.style.borderColor = '#ef4444';
+                            opt.innerHTML = `<span style="font-weight: 600; margin-right: 8px;">${String.fromCharCode(65 + oIndex)}.</span>${q.options[oIndex]} <span style="color: #ef4444; margin-left: 8px;">✗ Your Answer</span>`;
+                        }
+                    });
+                    
+                    // Show explanation
+                    explanationDiv.style.display = 'block';
+                    explanationDiv.innerHTML = `<strong style="color: #374151;">💡 Explanation:</strong><br>${q.explanation}`;
+                });
+                
+                // Display score
+                const scoreDiv = document.createElement('div');
+                scoreDiv.style.cssText = `
+                    margin-top: 20px;
+                    margin-bottom: 16px;
+                    padding: 16px;
+                    background: ${correctCount === questions.length ? '#d1fae5' : '#fef3c7'};
+                    border-radius: 8px;
+                    text-align: center;
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #1f2937;
+                `;
+                scoreDiv.innerHTML = `Your Score: ${correctCount}/${questions.length} (${Math.round(correctCount/questions.length*100)}%)`;
+                quizContainer.insertBefore(scoreDiv, quizContainer.lastChild);
+                
+                // Hide submit button
+                submitButton.style.display = 'none';
+                continueButton.style.display = 'inline-block';
+            };
+            
+            // Continue button
+            const continueButton = document.createElement('button');
+            continueButton.textContent = 'Generate New Questions';
+            continueButton.style.cssText = `
+                display: none;
+                background: #10b981;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+            `;
+            continueButton.onmouseover = () => continueButton.style.background = '#059669';
+            continueButton.onmouseout = () => continueButton.style.background = '#10b981';
+            continueButton.onclick = async () => {
+                // Remove current Quiz and generate new one
+                quizContainer.remove();
+                await generateQuiz();
+            };
+            
+            const buttonContainer = document.createElement('div');
+            buttonContainer.appendChild(submitButton);
+            buttonContainer.appendChild(continueButton);
+            quizContainer.appendChild(buttonContainer);
+            
+            chatContainer.appendChild(quizContainer);
+            
+            // Scroll to bottom
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 100);
+        }
+        
+        // Generate MindMap
+        async function generateMindMap() {
+            if (conversationHistory.length === 0) {
+                addMessageToUI('No conversation content yet. Please chat first before generating mind map', 'system');
+                return;
+            }
+            
+            // Display workflow steps
+            addMessageToUI('MindMap generation started', 'system');
+            addMessageToUI('Step 1/5: Analyzing conversation content structure...', 'system');
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            addMessageToUI('Step 2/5: Starting Reasoner model thinking...', 'system');
+            
+            try {
+                addMessageToUI('Step 3/5: Attempting to generate Mermaid code...', 'system');
+                
+                const response = await fetch(`${window.API_ENDPOINT}/generate-mindmap`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        conversation: conversationHistory
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Display different hints based on type
+                if (data.type === 'mermaid') {
+                    addMessageToUI('Mermaid code generation failed, regenerating', 'system');
+                    addMessageToUI('Step 4/5: Mermaid code generation successful...', 'system');
+                } else {
+                    addMessageToUI('Step 4/5: Mermaid code validation passed...', 'system');
+                }
+                
+                addMessageToUI('Step 5/5: Saving TXT and chart files...', 'system');
+                
+                // Add to Recent list
+                addMindMapToRecent(data.filename, data.diagram_url, data.txt_url, data.summary, data.type);
+                
+                const typeLabel = data.type === 'mermaid' ? 'Mermaid' : 'DrawIO';
+                addMessageToUI(`${typeLabel} mind map generation complete: ${data.filename}`, 'system');
+                
+            } catch (error) {
+                console.error('Mind map generation error:', error);
+                addMessageToUI(`Mind map generation failed: ${error.message}`, 'system');
+            }
+        }
+        
+        // Add mind map to Recent list (Mermaid only)
+        function addMindMapToRecent(filename, diagramUrl, txtUrl, summary) {
+            const recentList = document.getElementById('recentList');
+            
+            const mapCard = document.createElement('div');
+            mapCard.className = 'studio-card mindmap-card';
+            mapCard.style.transition = 'all 0.3s';
+            
+            mapCard.innerHTML = `
+                <div style="flex: 1;">
+                    <div class="studio-card-title">🔷 ${filename}</div>
+                    <div class="studio-card-meta" style="font-size: 11px; color: #9ca3af; margin-top: 4px;">${summary}</div>
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <button onclick="event.stopPropagation(); viewMermaid('${diagramUrl}', '${filename}')" 
+                                style="flex: 1; padding: 6px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;">
+                              View Chart
+                        </button>
+                        <button onclick="event.stopPropagation(); downloadFile('${txtUrl}', '${filename}.txt')" 
+                                style="flex: 1; padding: 6px 12px; background: #4b5563; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                              Download Code
+                        </button>
+                    </div>
+                </div>
+                <button class="studio-menu" onclick="event.stopPropagation(); deleteMindMap(this)">×</button>
+            `;
+            
+            // Add to list top
+            recentList.insertBefore(mapCard, recentList.firstChild);
+        }
+        
+        // View Mermaid chart (optimized)
+        async function viewMermaid(mmdUrl, filename) {
+            try {
+                const response = await fetch(mmdUrl);
+                const mermaidCode = await response.text();
+                
+                // Display Mermaid chart in chat area
+                const mermaidContainer = document.createElement('div');
+                mermaidContainer.style.cssText = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; padding: 2px; margin: 16px 0;';
+                
+                const mermaidId = 'mermaid-' + Date.now();
+                mermaidContainer.innerHTML = `
+                    <div style="background: white; border-radius: 8px; padding: 20px;">
+                        <div style="font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 24px;">🔷</span>
+                                <span style="color: #667eea; font-size: 16px;">${filename}</span>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="downloadFile('${mmdUrl}', '${filename}.mmd')" 
+                                        style="padding: 6px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">
+                                    📥 Download .mmd
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mermaid" id="${mermaidId}" style="background: #f9fafb; padding: 20px; border-radius: 8px;">${mermaidCode}</div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 16px; padding: 12px; background: #f3f4f6; border-radius: 6px; border-left: 3px solid #667eea;">
+                            💡 Tip: Edit this chart at <a href="https://mermaid.live" target="_blank" style="color: #667eea; font-weight: 500; text-decoration: none;">mermaid.live</a> editor
+                        </div>
+                    </div>
+                `;
+                
+                chatContainer.appendChild(mermaidContainer);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                // Render Mermaid
+                if (typeof mermaid !== 'undefined') {
+                    mermaid.init(undefined, document.getElementById(mermaidId));
+                }
+                
+            } catch (error) {
+                console.error('View Mermaid chart error:', error);
+                addMessageToUI(`Failed to view chart: ${error.message}`, 'system');
+            }
+        }
+        
+        // Generic download file function
+        function downloadFile(url, filename) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            const fileType = filename.endsWith('.txt') ? 'TXT XML code' : 'mind map';
+            const tip = filename.endsWith('.txt') ? 
+                '💡 Tip: The TXT file contains complete DrawIO XML code' : 
+                '💡 Tip: Please visit https://app.diagrams.net to open this file and view the mind map';
+            
+            addMessageToUI(`Downloading ${fileType}: ${filename}\n\n${tip}`, 'system');
+        }
+        
+        // Delete mind map
+        function deleteMindMap(button) {
+            const mapCard = button.closest('.mindmap-card');
+            if (mapCard && confirm('Are you sure you want to delete this mind map?')) {
+                mapCard.remove();
+            }
+        }
+    </script>
+    
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    
+    <!-- Highlight.js for code syntax highlighting -->
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    
+    <!-- KaTeX JavaScript for math rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    
+    <script>
+        // Configure marked.js
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    try {
+                        return hljs.highlight(code, { language: lang }).value;
+                    } catch (err) {}
+                }
+                return hljs.highlightAuto(code).value;
+            }
+        });
+    </script>
+</body>
+</html>

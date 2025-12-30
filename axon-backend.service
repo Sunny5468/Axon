@@ -1,0 +1,31 @@
+[Unit]
+Description=Axon Backend API Service
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/axon/backend
+Environment="PATH=/var/www/axon/backend/venv/bin"
+
+# 加载环境变量
+EnvironmentFile=/var/www/axon/backend/.env
+
+# 启动命令
+ExecStart=/var/www/axon/backend/venv/bin/python /var/www/axon/backend/main.py
+
+# 自动重启配置
+Restart=always
+RestartSec=10
+
+# 日志配置
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=axon-backend
+
+# 资源限制
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
